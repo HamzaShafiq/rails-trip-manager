@@ -1,2 +1,4 @@
 class Vehicle < ApplicationRecord
+	belongs_to :company
+	has_many :trips, dependent: :destroy
 end
