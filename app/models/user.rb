@@ -11,6 +11,14 @@ class User < ApplicationRecord
     end
   end
 
+  def admin?
+    self.role == 'admin'
+  end
+
+  def read_only?
+    self.role == 'read-only'
+  end
+
   private
 
     def set_api_key
