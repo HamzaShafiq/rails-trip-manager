@@ -1,6 +1,6 @@
 class User < ApplicationRecord
-	belongs_to :company
-	has_many :trips, dependent: :destroy
+  belongs_to :company
+  has_many :trips, dependent: :destroy
 
   before_create :set_api_key
 
