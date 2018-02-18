@@ -2,6 +2,8 @@ class Trip < ApplicationRecord
 	belongs_to :user
 	belongs_to :vehicle
 
+  scope :get_trips, -> (start_time, end_time) { where(:start_time => start_time..end_time) }
+
   ALLOWED_PARAMS = [:start_time, :end_time, :distance_travelled, :user_id, :vehicle_id]
 
   def self.overlap?(current_trip, all_trips)
@@ -17,8 +19,10 @@ class Trip < ApplicationRecord
         result = current_trip_end_time >= other_trip_start_time
       elsif current_trip_end_time.blank? && other_trip_end_time.present?
         result = other_trip_end_time >= current_trip_start_time
-      else
+      elsif current_trip_end_time.present? && other_trip_end_time.present?
         result = current_trip_start_time <= other_trip_end_time && other_trip_start_time <= current_trip_end_time
+      else
+        result = true
       end
     end
 

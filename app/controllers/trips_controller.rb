@@ -3,17 +3,23 @@ class TripsController < ApplicationController
   before_action :check_user_role , only: :create
   before_action :validate_params, only: :create
   before_action :validate_data, only: :create
+  before_action :validate_index_params, only: :index
 
   # GET /trips
   def index
-    @trips = Trip.all
+    start_time = params[:start_time].to_datetime.utc
+    end_time = params[:end_time].to_datetime.utc
+    @trips = Trip.get_trips(start_time, end_time)
+
+    if params[:user_id].present?
+      @trips = @trips.where(user_id: params[:user_id])
+    end
+
+    if params[:vehicle_id].present?
+      @trips = @trips.where(vehicle_id: params[:vehicle_id])
+    end
 
     render json: @trips
-  end
-
-  # GET /trips/1
-  def show
-    render json: @trip
   end
 
   # POST /trips
@@ -39,13 +45,15 @@ class TripsController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_trip
-      @trip = Trip.find(params[:id])
-    end
 
     def check_user_role
       render json: { message: "User don't have permission to create trips." }, status: :unauthorized if @current_user.read_only?
+    end
+
+    def validate_index_params
+      if params[:start_time].blank? || params[:end_time].blank?
+        return render json: { message: "Start/End time parameter missing" }, status: :bad_request
+      end
     end
 
     def validate_params
