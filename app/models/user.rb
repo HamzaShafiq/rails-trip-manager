@@ -4,6 +4,9 @@ class User < ApplicationRecord
 
   before_create :set_api_key
 
+  validates :name, presence: true
+  validates :role, presence: true
+
   def generate_api_key
     loop do
       token = SecureRandom.base64.tr('+/=', 'Qrt')
