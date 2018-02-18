@@ -19,6 +19,8 @@ class TripsController < ApplicationController
       @trips = @trips.where(vehicle_id: params[:vehicle_id])
     end
 
+    @trips = @trips.where(user_id: @company.users.pluck(:id), vehicle_id: @company.vehicles.pluck(:id))
+
     render json: @trips
   end
 
