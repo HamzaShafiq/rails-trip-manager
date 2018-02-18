@@ -4,6 +4,7 @@ class TripsController < ApplicationController
   before_action :validate_params, only: :create
   before_action :validate_data, only: :create
   before_action :validate_index_params, only: :index
+  before_action :validate_parameters, only: :trips_summary
 
   # GET /trips
   def index
@@ -46,10 +47,50 @@ class TripsController < ApplicationController
     end
   end
 
+  def trips_summary
+    start_time = params[:start_time].to_datetime.utc
+    end_time = params[:end_time].to_datetime.utc
+    type = ''
+
+    @trips = Trip.get_trips(start_time, end_time)
+
+    if params[:user_id].present?
+      type = 'user'
+      @trips = @trips.where(user_id: params[:user_id])
+    end
+
+    if params[:vehicle_id].present?
+      type = 'vehicle'
+      @trips = @trips.where(vehicle_id: params[:vehicle_id])
+    end
+
+    if @trips.present?
+      sum = 0
+      @trips.pluck(:distance_travelled).each do |distance_travelled|
+        sum = sum + distance_travelled.split("km").first.to_i
+      end
+    end
+
+    render json: { message: "Total distance travelled by #{type} is #{sum} km" }, status: :created
+
+  end
+
   private
 
     def check_user_role
       render json: { message: "User don't have permission to create trips." }, status: :unauthorized if @current_user.read_only?
+    end
+
+    def validate_parameters
+      if params[:start_time].blank? || params[:end_time].blank?
+        message = "Start/End time parameter missing"
+      elsif params[:user_id].present? && params[:vehicle_id].present?
+        message = "Send either user_id or vehicle_id. Can't send both"
+      elsif params[:user_id].blank? && params[:vehicle_id].blank?
+        message = "User id or Vehicle id is must"
+      end
+
+      return render json: { message: message }, status: :bad_request if message.present?
     end
 
     def validate_index_params
